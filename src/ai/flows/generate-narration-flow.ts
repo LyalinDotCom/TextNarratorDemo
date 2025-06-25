@@ -15,6 +15,7 @@ import wav from 'wav';
 const GenerateGeminiNarrationInputSchema = z.object({
   text: z.string().describe('The text to be narrated.'),
   voice: z.string().describe('The voice to use for narration.'),
+  language: z.string().describe('The BCP-47 language code for the narration.'),
 });
 export type GenerateGeminiNarrationInput = z.infer<typeof GenerateGeminiNarrationInputSchema>;
 
@@ -42,6 +43,7 @@ const generateGeminiNarrationFlow = ai.defineFlow(
           voiceConfig: {
             prebuiltVoiceConfig: { voiceName: input.voice },
           },
+          languageCode: input.language,
         },
       },
       prompt: input.text,

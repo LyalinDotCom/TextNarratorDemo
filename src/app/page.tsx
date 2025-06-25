@@ -44,6 +44,33 @@ const voices = [
   { name: 'Sulafat', description: 'Warm' }
 ];
 
+const languages = [
+  { name: 'Arabic (Egyptian)', code: 'ar-EG' },
+  { name: 'German (Germany)', code: 'de-DE' },
+  { name: 'English (US)', code: 'en-US' },
+  { name: 'Spanish (US)', code: 'es-US' },
+  { name: 'French (France)', code: 'fr-FR' },
+  { name: 'Hindi (India)', code: 'hi-IN' },
+  { name: 'Indonesian (Indonesia)', code: 'id-ID' },
+  { name: 'Italian (Italy)', code: 'it-IT' },
+  { name: 'Japanese (Japan)', code: 'ja-JP' },
+  { name: 'Korean (Korea)', code: 'ko-KR' },
+  { name: 'Portuguese (Brazil)', code: 'pt-BR' },
+  { name: 'Russian (Russia)', code: 'ru-RU' },
+  { name: 'Dutch (Netherlands)', code: 'nl-NL' },
+  { name: 'Polish (Poland)', code: 'pl-PL' },
+  { name: 'Thai (Thailand)', code: 'th-TH' },
+  { name: 'Turkish (Turkey)', code: 'tr-TR' },
+  { name: 'Vietnamese (Vietnam)', code: 'vi-VN' },
+  { name: 'Romanian (Romania)', code: 'ro-RO' },
+  { name: 'Ukrainian (Ukraine)', code: 'uk-UA' },
+  { name: 'Bengali (Bangladesh)', code: 'bn-BD' },
+  { name: 'English (India)', code: 'en-IN' },
+  { name: 'Marathi (India)', code: 'mr-IN' },
+  { name: 'Tamil (India)', code: 'ta-IN' },
+  { name: 'Telugu (India)', code: 'te-IN' },
+];
+
 export default function Home() {
   const [text, setText] = useState('');
   const [audioData, setAudioData] = useState<string | null>(null);
@@ -51,6 +78,7 @@ export default function Home() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoadingInitialText, setIsLoadingInitialText] = useState(true);
   const [selectedVoice, setSelectedVoice] = useState('Algenib');
+  const [selectedLanguage, setSelectedLanguage] = useState('en-US');
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
@@ -108,7 +136,7 @@ export default function Home() {
     setIsPlaying(false);
 
     try {
-      const result = await generateGeminiNarration({ text, voice: selectedVoice });
+      const result = await generateGeminiNarration({ text, voice: selectedVoice, language: selectedLanguage });
       if (result.media) {
         setAudioData(result.media);
       } else {
@@ -196,6 +224,21 @@ export default function Home() {
                     {voices.map(voice => (
                         <SelectItem key={voice.name} value={voice.name}>
                             {voice.name} - <span className="text-muted-foreground">{voice.description}</span>
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="language-select">Language</Label>
+            <Select value={selectedLanguage} onValueChange={setSelectedLanguage} disabled={isGenerating || isLoadingInitialText}>
+                <SelectTrigger id="language-select" className="w-full">
+                    <SelectValue placeholder="Select a language" />
+                </SelectTrigger>
+                <SelectContent>
+                    {languages.map(lang => (
+                        <SelectItem key={lang.code} value={lang.code}>
+                            {lang.name}
                         </SelectItem>
                     ))}
                 </SelectContent>
