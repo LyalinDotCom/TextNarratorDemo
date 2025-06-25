@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * @fileOverview A text narration AI agent.
+ * @fileOverview A text narration AI agent. It translates text before narrating.
  *
  * - generateGeminiNarration - A function that handles the generation of text narration using Gemini.
  * - GenerateGeminiNarrationInput - The input type for the generateGeminiNarration function.
@@ -11,16 +11,18 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import wav from 'wav';
+import { translateText } from './translate-text-flow';
 
 const GenerateGeminiNarrationInputSchema = z.object({
-  text: z.string().describe('The text to be narrated.'),
+  text: z.string().describe('The text to be translated and narrated.'),
   voice: z.string().describe('The voice to use for narration.'),
-  language: z.string().describe('The BCP-47 language code for the narration.'),
+  language: z.string().describe('The BCP-47 language code for the translation and narration.'),
 });
 export type GenerateGeminiNarrationInput = z.infer<typeof GenerateGeminiNarrationInputSchema>;
 
 const GenerateGeminiNarrationOutputSchema = z.object({
   media: z.string().describe('The audio narration of the input text as a data URI.'),
+  translatedText: z.string().describe('The translated text that was narrated.'),
 });
 export type GenerateGeminiNarrationOutput = z.infer<typeof GenerateGeminiNarrationOutputSchema>;
 
@@ -35,6 +37,13 @@ const generateGeminiNarrationFlow = ai.defineFlow(
     outputSchema: GenerateGeminiNarrationOutputSchema,
   },
   async (input) => {
+    // Step 1: Translate the text
+    const { translatedText } = await translateText({
+      text: input.text,
+      targetLanguage: input.language,
+    });
+
+    // Step 2: Generate narration from the translated text
     const { media } = await ai.generate({
       model: 'googleai/gemini-2.5-flash-preview-tts',
       config: {
@@ -46,7 +55,7 @@ const generateGeminiNarrationFlow = ai.defineFlow(
           languageCode: input.language,
         },
       },
-      prompt: input.text,
+      prompt: translatedText,
     });
     if (!media) {
       throw new Error('no media returned');
@@ -57,6 +66,7 @@ const generateGeminiNarrationFlow = ai.defineFlow(
     );
     return {
       media: 'data:audio/wav;base64,' + (await toWav(audioBuffer)),
+      translatedText,
     };
   }
 );

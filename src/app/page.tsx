@@ -73,6 +73,7 @@ const languages = [
 
 export default function Home() {
   const [text, setText] = useState('');
+  const [translatedText, setTranslatedText] = useState<string | null>(null);
   const [audioData, setAudioData] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -133,12 +134,14 @@ export default function Home() {
 
     setIsGenerating(true);
     setAudioData(null);
+    setTranslatedText(null);
     setIsPlaying(false);
 
     try {
       const result = await generateGeminiNarration({ text, voice: selectedVoice, language: selectedLanguage });
       if (result.media) {
         setAudioData(result.media);
+        setTranslatedText(result.translatedText);
       } else {
         throw new Error("No audio data received from the AI.");
       }
@@ -201,48 +204,66 @@ export default function Home() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {isLoadingInitialText ? (
-            <div className="space-y-2">
+          <div className="space-y-2">
+            {isLoadingInitialText ? (
               <Skeleton className="h-[200px] w-full" />
-            </div>
-          ) : (
-            <Textarea
-              placeholder="Type or paste your text here..."
-              className="min-h-[200px] resize-none text-base"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              disabled={isGenerating}
-            />
-          )}
-          <div className="space-y-2">
-            <Label htmlFor="voice-select">Voice</Label>
-            <Select value={selectedVoice} onValueChange={setSelectedVoice} disabled={isGenerating || isLoadingInitialText}>
-                <SelectTrigger id="voice-select" className="w-full">
-                    <SelectValue placeholder="Select a voice" />
-                </SelectTrigger>
-                <SelectContent>
-                    {voices.map(voice => (
-                        <SelectItem key={voice.name} value={voice.name}>
-                            {voice.name} - <span className="text-muted-foreground">{voice.description}</span>
-                        </SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
+            ) : (
+              <Textarea
+                placeholder="Type or paste your text here..."
+                className="min-h-[200px] resize-none text-base"
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                disabled={isGenerating}
+              />
+            )}
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="language-select">Language</Label>
-            <Select value={selectedLanguage} onValueChange={setSelectedLanguage} disabled={isGenerating || isLoadingInitialText}>
-                <SelectTrigger id="language-select" className="w-full">
-                    <SelectValue placeholder="Select a language" />
-                </SelectTrigger>
-                <SelectContent>
-                    {languages.map(lang => (
-                        <SelectItem key={lang.code} value={lang.code}>
-                            {lang.name}
-                        </SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
+          {(isGenerating && !translatedText) && (
+            <div className="space-y-2">
+                <Skeleton className="h-[100px] w-full" />
+            </div>
+          )}
+          {translatedText && (
+            <div className="space-y-2">
+                <Label htmlFor="translated-text">Translated Text</Label>
+                <Textarea
+                    id="translated-text"
+                    readOnly
+                    className="min-h-[100px] resize-none text-base bg-muted/50"
+                    value={translatedText}
+                />
+            </div>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="voice-select">Voice</Label>
+              <Select value={selectedVoice} onValueChange={setSelectedVoice} disabled={isGenerating || isLoadingInitialText}>
+                  <SelectTrigger id="voice-select" className="w-full">
+                      <SelectValue placeholder="Select a voice" />
+                  </SelectTrigger>
+                  <SelectContent>
+                      {voices.map(voice => (
+                          <SelectItem key={voice.name} value={voice.name}>
+                              {voice.name} - <span className="text-muted-foreground">{voice.description}</span>
+                          </SelectItem>
+                      ))}
+                  </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="language-select">Language</Label>
+              <Select value={selectedLanguage} onValueChange={setSelectedLanguage} disabled={isGenerating || isLoadingInitialText}>
+                  <SelectTrigger id="language-select" className="w-full">
+                      <SelectValue placeholder="Select a language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                      {languages.map(lang => (
+                          <SelectItem key={lang.code} value={lang.code}>
+                              {lang.name}
+                          </SelectItem>
+                      ))}
+                  </SelectContent>
+              </Select>
+            </div>
           </div>
           <Button
             onClick={handleGenerateNarration}
