@@ -8,6 +8,41 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Play, Pause, StopCircle, Download, BookAudio } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+
+const voices = [
+  { name: 'Zephyr', description: 'Bright' },
+  { name: 'Puck', description: 'Upbeat' },
+  { name: 'Charon', description: 'Informative' },
+  { name: 'Kore', description: 'Firm' },
+  { name: 'Fenrir', description: 'Excitable' },
+  { name: 'Leda', description: 'Youthful' },
+  { name: 'Orus', description: 'Firm' },
+  { name: 'Aoede', description: 'Breezy' },
+  { name: 'Callirrhoe', description: 'Easy-going' },
+  { name: 'Autonoe', description: 'Bright' },
+  { name: 'Enceladus', description: 'Breathy' },
+  { name: 'Iapetus', description: 'Clear' },
+  { name: 'Umbriel', description: 'Easy-going' },
+  { name: 'Algieba', description: 'Smooth' },
+  { name: 'Despina', description: 'Smooth' },
+  { name: 'Erinome', description: 'Clear' },
+  { name: 'Algenib', description: 'Gravelly' },
+  { name: 'Rasalgethi', description: 'Informative' },
+  { name: 'Laomedeia', description: 'Upbeat' },
+  { name: 'Achernar', description: 'Soft' },
+  { name: 'Alnilam', description: 'Firm' },
+  { name: 'Schedar', description: 'Even' },
+  { name: 'Gacrux', description: 'Mature' },
+  { name: 'Pulcherrima', description: 'Forward' },
+  { name: 'Achird', description: 'Friendly' },
+  { name: 'Zubenelgenubi', description: 'Casual' },
+  { name: 'Vindemiatrix', description: 'Gentle' },
+  { name: 'Sadachbia', description: 'Lively' },
+  { name: 'Sadaltager', description: 'Knowledgeable' },
+  { name: 'Sulafat', description: 'Warm' }
+];
 
 export default function Home() {
   const [text, setText] = useState('');
@@ -15,6 +50,7 @@ export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoadingInitialText, setIsLoadingInitialText] = useState(true);
+  const [selectedVoice, setSelectedVoice] = useState('Algenib');
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
@@ -72,7 +108,7 @@ export default function Home() {
     setIsPlaying(false);
 
     try {
-      const result = await generateGeminiNarration(text);
+      const result = await generateGeminiNarration({ text, voice: selectedVoice });
       if (result.media) {
         setAudioData(result.media);
       } else {
@@ -150,6 +186,21 @@ export default function Home() {
               disabled={isGenerating}
             />
           )}
+          <div className="space-y-2">
+            <Label htmlFor="voice-select">Voice</Label>
+            <Select value={selectedVoice} onValueChange={setSelectedVoice} disabled={isGenerating || isLoadingInitialText}>
+                <SelectTrigger id="voice-select" className="w-full">
+                    <SelectValue placeholder="Select a voice" />
+                </SelectTrigger>
+                <SelectContent>
+                    {voices.map(voice => (
+                        <SelectItem key={voice.name} value={voice.name}>
+                            {voice.name} - <span className="text-muted-foreground">{voice.description}</span>
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+          </div>
           <Button
             onClick={handleGenerateNarration}
             disabled={isGenerating || isLoadingInitialText || !text.trim()}

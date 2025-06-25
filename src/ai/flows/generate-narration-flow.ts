@@ -12,7 +12,10 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import wav from 'wav';
 
-const GenerateGeminiNarrationInputSchema = z.string().describe('The text to be narrated.');
+const GenerateGeminiNarrationInputSchema = z.object({
+  text: z.string().describe('The text to be narrated.'),
+  voice: z.string().describe('The voice to use for narration.'),
+});
 export type GenerateGeminiNarrationInput = z.infer<typeof GenerateGeminiNarrationInputSchema>;
 
 const GenerateGeminiNarrationOutputSchema = z.object({
@@ -30,18 +33,18 @@ const generateGeminiNarrationFlow = ai.defineFlow(
     inputSchema: GenerateGeminiNarrationInputSchema,
     outputSchema: GenerateGeminiNarrationOutputSchema,
   },
-  async (query) => {
+  async (input) => {
     const { media } = await ai.generate({
       model: 'googleai/gemini-2.5-flash-preview-tts',
       config: {
         responseModalities: ['AUDIO'],
         speechConfig: {
           voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Algenib' },
+            prebuiltVoiceConfig: { voiceName: input.voice },
           },
         },
       },
-      prompt: query,
+      prompt: input.text,
     });
     if (!media) {
       throw new Error('no media returned');
